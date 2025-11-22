@@ -22,9 +22,13 @@ import ProductDetail from "./pages/products/ProductDetail";
 
 // Operations Pages
 import ReceiptsList from "./pages/operations/ReceiptsList";
+import ReceiptDetail from "./pages/operations/ReceiptDetail";
 import DeliveriesList from "./pages/operations/DeliveriesList";
+import DeliveryDetail from "./pages/operations/DeliveryDetail";
 import TransfersList from "./pages/operations/TransfersList";
+import TransferDetail from "./pages/operations/TransferDetail";
 import AdjustmentsList from "./pages/operations/AdjustmentsList";
+import AdjustmentDetail from "./pages/operations/AdjustmentDetail";
 import MoveHistory from "./pages/operations/MoveHistory";
 
 // Settings Pages
@@ -104,10 +108,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/receipts/:id"
+              element={
+                <ProtectedRoute>
+                  <ReceiptDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/deliveries"
               element={
                 <ProtectedRoute>
                   <DeliveriesList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/deliveries/:id"
+              element={
+                <ProtectedRoute>
+                  <DeliveryDetail />
                 </ProtectedRoute>
               }
             />
@@ -120,10 +140,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/transfers/:id"
+              element={
+                <ProtectedRoute>
+                  <TransferDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/adjustments"
               element={
                 <ProtectedRoute>
                   <AdjustmentsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/adjustments/:id"
+              element={
+                <ProtectedRoute>
+                  <AdjustmentDetail />
                 </ProtectedRoute>
               }
             />
