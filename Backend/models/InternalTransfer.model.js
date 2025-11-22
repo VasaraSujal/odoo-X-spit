@@ -107,8 +107,7 @@ internalTransferSchema.pre('save', async function(next) {
   next();
 });
 
-// Indexes for efficient querying
-internalTransferSchema.index({ referenceNo: 1 });
+// Indexes for efficient querying (referenceNo already indexed via unique: true)
 internalTransferSchema.index({ sourceWarehouseId: 1, date: -1 });
 internalTransferSchema.index({ destinationWarehouseId: 1, date: -1 });
 internalTransferSchema.index({ status: 1, date: -1 });

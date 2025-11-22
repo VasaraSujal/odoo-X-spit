@@ -116,8 +116,7 @@ deliveryOrderSchema.pre('save', async function(next) {
   next();
 });
 
-// Index for searching and filtering
-deliveryOrderSchema.index({ referenceNo: 1 });
+// Index for searching and filtering (referenceNo already indexed via unique: true)
 deliveryOrderSchema.index({ customerName: 'text' });
 deliveryOrderSchema.index({ status: 1, date: -1 });
 deliveryOrderSchema.index({ warehouseId: 1, date: -1 });

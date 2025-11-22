@@ -116,8 +116,7 @@ receiptSchema.pre('save', async function(next) {
   next();
 });
 
-// Index for searching and filtering
-receiptSchema.index({ referenceNo: 1 });
+// Index for searching and filtering (referenceNo already indexed via unique: true)
 receiptSchema.index({ supplierName: 'text' });
 receiptSchema.index({ status: 1, date: -1 });
 receiptSchema.index({ warehouseId: 1, date: -1 });

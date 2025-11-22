@@ -1,8 +1,8 @@
 import DeliveryOrder from '../models/DeliveryOrder.model.js';
 import Product from '../models/Product.model.js';
 import StockMovement from '../models/StockMovement.model.js';
-import catchAsync from '../utils/catchAsync.js';
-import AppError from '../utils/appError.js';
+import { catchAsync } from '../utils/catchAsync.js';
+import { AppError } from '../utils/appError.js';
 
 // @desc    Get all delivery orders
 // @route   GET /api/deliveries

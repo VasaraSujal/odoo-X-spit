@@ -118,8 +118,7 @@ stockAdjustmentSchema.pre('save', async function(next) {
   next();
 });
 
-// Indexes for efficient querying
-stockAdjustmentSchema.index({ referenceNo: 1 });
+// Indexes for efficient querying (referenceNo already indexed via unique: true)
 stockAdjustmentSchema.index({ warehouseId: 1, date: -1 });
 stockAdjustmentSchema.index({ adjustmentType: 1, date: -1 });
 stockAdjustmentSchema.index({ status: 1, date: -1 });
