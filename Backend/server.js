@@ -5,6 +5,12 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
+import productRoutes from './routes/product.routes.js';
+import receiptRoutes from './routes/receipt.routes.js';
+import deliveryRoutes from './routes/delivery.routes.js';
+import transferRoutes from './routes/transfer.routes.js';
+import adjustmentRoutes from './routes/adjustment.routes.js';
+import stockMovementRoutes from './routes/stockMovement.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 // Load environment variables
@@ -34,6 +40,12 @@ app.use(cookieParser());
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/receipts', receiptRoutes);
+app.use('/api/deliveries', deliveryRoutes);
+app.use('/api/transfers', transferRoutes);
+app.use('/api/adjustments', adjustmentRoutes);
+app.use('/api/stock-movements', stockMovementRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

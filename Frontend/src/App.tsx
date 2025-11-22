@@ -23,6 +23,7 @@ import ProductDetail from "./pages/products/ProductDetail";
 // Operations Pages
 import ReceiptsList from "./pages/operations/ReceiptsList";
 import ReceiptDetail from "./pages/operations/ReceiptDetail";
+import ReceiptForm from "./pages/operations/ReceiptForm";
 import DeliveriesList from "./pages/operations/DeliveriesList";
 import DeliveryDetail from "./pages/operations/DeliveryDetail";
 import DeliveryForm from "./pages/operations/DeliveryForm";
@@ -113,10 +114,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/receipts/new"
+              element={
+                <ProtectedRoute>
+                  <ReceiptForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/receipts/:id"
               element={
                 <ProtectedRoute>
                   <ReceiptDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/receipts/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <ReceiptForm />
                 </ProtectedRoute>
               }
             />

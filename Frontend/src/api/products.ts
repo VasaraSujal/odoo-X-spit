@@ -1,10 +1,39 @@
-// Mock products API
-import { mockProducts } from "./mockData";
+// Real Backend Products API
 import type { Product } from "@/types";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-let products = [...mockProducts];
+// Helper function to get auth token
+const getAuthToken = (): string | null => {
+  return localStorage.getItem("authToken");
+};
+
+// Helper function to make authenticated requests
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || data.errors?.[0]?.message || "Request failed");
+  }
+
+  return data;
+};
 
 export const productsApi = {
   // Get all products
@@ -12,97 +41,76 @@ export const productsApi = {
     search?: string;
     category?: string;
     warehouseId?: string;
+    page?: number;
+    limit?: number;
   }): Promise<Product[]> {
-    await delay(500);
+    const params = new URLSearchParams();
     
-    let filtered = [...products];
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.category) params.append("category", filters.category);
+    if (filters?.warehouseId) params.append("warehouseId", filters.warehouseId);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
+
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/products${queryString ? `?${queryString}` : ""}`;
     
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search) ||
-          p.sku.toLowerCase().includes(search)
-      );
-    }
-    
-    if (filters?.category) {
-      filtered = filtered.filter((p) => p.category === filters.category);
-    }
-    
-    if (filters?.warehouseId) {
-      filtered = filtered.filter((p) =>
-        p.stockByLocation.some((s) => s.warehouseId === filters.warehouseId)
-      );
-    }
-    
-    return filtered;
+    const data = await fetchWithAuth(url);
+    return data.products;
   },
 
   // Get product by ID
   async getProduct(id: string): Promise<Product> {
-    await delay(300);
-    
-    const product = products.find((p) => p.id === id);
-    if (!product) {
-      throw new Error("Product not found");
-    }
-    
-    return product;
+    const data = await fetchWithAuth(`${API_BASE_URL}/products/${id}`);
+    return data.product;
   },
 
   // Create product
-  async createProduct(data: Omit<Product, "id" | "createdAt" | "updatedAt" | "totalStock" | "stockByLocation">): Promise<Product> {
-    await delay(600);
-    
-    const newProduct: Product = {
-      ...data,
-      id: `prod-${Date.now()}`,
-      totalStock: 0,
-      stockByLocation: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    products.push(newProduct);
-    return newProduct;
+  async createProduct(productData: Omit<Product, "id" | "createdAt" | "updatedAt" | "totalStock" | "stockByLocation">): Promise<Product> {
+    const data = await fetchWithAuth(`${API_BASE_URL}/products`, {
+      method: "POST",
+      body: JSON.stringify(productData),
+    });
+    return data.product;
   },
 
   // Update product
-  async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
-    await delay(600);
-    
-    const index = products.findIndex((p) => p.id === id);
-    if (index === -1) {
-      throw new Error("Product not found");
-    }
-    
-    products[index] = {
-      ...products[index],
-      ...data,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    return products[index];
+  async updateProduct(id: string, productData: Partial<Product>): Promise<Product> {
+    const data = await fetchWithAuth(`${API_BASE_URL}/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(productData),
+    });
+    return data.product;
   },
 
   // Delete product
   async deleteProduct(id: string): Promise<void> {
-    await delay(400);
-    
-    const index = products.findIndex((p) => p.id === id);
-    if (index === -1) {
-      throw new Error("Product not found");
-    }
-    
-    products.splice(index, 1);
+    await fetchWithAuth(`${API_BASE_URL}/products/${id}`, {
+      method: "DELETE",
+    });
   },
 
   // Get categories
   async getCategories(): Promise<string[]> {
-    await delay(200);
-    
-    const categories = Array.from(new Set(products.map((p) => p.category)));
-    return categories.sort();
+    const data = await fetchWithAuth(`${API_BASE_URL}/products/categories/list`);
+    return data.categories;
+  },
+
+  // Update stock for a product location
+  async updateStock(
+    productId: string,
+    stockData: {
+      warehouseId: string;
+      warehouseName: string;
+      locationId: string;
+      locationName: string;
+      quantity: number;
+    }
+  ): Promise<Product> {
+    const data = await fetchWithAuth(`${API_BASE_URL}/products/${productId}/stock`, {
+      method: "PUT",
+      body: JSON.stringify(stockData),
+    });
+    return data.product;
   },
 };
