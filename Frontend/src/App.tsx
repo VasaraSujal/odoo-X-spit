@@ -25,14 +25,19 @@ import ReceiptsList from "./pages/operations/ReceiptsList";
 import ReceiptDetail from "./pages/operations/ReceiptDetail";
 import DeliveriesList from "./pages/operations/DeliveriesList";
 import DeliveryDetail from "./pages/operations/DeliveryDetail";
+import DeliveryForm from "./pages/operations/DeliveryForm";
 import TransfersList from "./pages/operations/TransfersList";
 import TransferDetail from "./pages/operations/TransferDetail";
+import TransferForm from "./pages/operations/TransferForm";
 import AdjustmentsList from "./pages/operations/AdjustmentsList";
 import AdjustmentDetail from "./pages/operations/AdjustmentDetail";
+import AdjustmentForm from "./pages/operations/AdjustmentForm";
 import MoveHistory from "./pages/operations/MoveHistory";
 
 // Settings Pages
 import WarehousesList from "./pages/settings/WarehousesList";
+import WarehouseDetail from "./pages/settings/WarehouseDetail";
+import WarehouseForm from "./pages/settings/WarehouseForm";
 
 import NotFound from "./pages/NotFound";
 
@@ -124,10 +129,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/deliveries/new"
+              element={
+                <ProtectedRoute>
+                  <DeliveryForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/deliveries/:id"
               element={
                 <ProtectedRoute>
                   <DeliveryDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/deliveries/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <DeliveryForm />
                 </ProtectedRoute>
               }
             />
@@ -140,10 +161,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/transfers/new"
+              element={
+                <ProtectedRoute>
+                  <TransferForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/transfers/:id"
               element={
                 <ProtectedRoute>
                   <TransferDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/transfers/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <TransferForm />
                 </ProtectedRoute>
               }
             />
@@ -156,10 +193,26 @@ const App = () => (
               }
             />
             <Route
+              path="/operations/adjustments/new"
+              element={
+                <ProtectedRoute>
+                  <AdjustmentForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/operations/adjustments/:id"
               element={
                 <ProtectedRoute>
                   <AdjustmentDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/operations/adjustments/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <AdjustmentForm />
                 </ProtectedRoute>
               }
             />
@@ -178,6 +231,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <WarehousesList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/warehouses/new"
+              element={
+                <ProtectedRoute>
+                  <WarehouseForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/warehouses/:id"
+              element={
+                <ProtectedRoute>
+                  <WarehouseDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/warehouses/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <WarehouseForm />
                 </ProtectedRoute>
               }
             />
