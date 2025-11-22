@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { productsApi } from "@/api/products";
 import type { Product } from "@/types";
@@ -29,8 +29,10 @@ export default function ProductsList() {
   const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [stockStatus, setStockStatus] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,6 +54,14 @@ export default function ProductsList() {
     loadData();
   }, []);
 
+  // Set initial stock status filter from URL params
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam === "low-stock" || statusParam === "out-of-stock") {
+      setStockStatus(statusParam);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     let filtered = [...products];
 
@@ -67,8 +77,21 @@ export default function ProductsList() {
       filtered = filtered.filter((p) => p.category === selectedCategory);
     }
 
+    // Apply stock status filter
+    if (stockStatus === "out-of-stock") {
+      filtered = filtered.filter((p) => p.totalStock === 0);
+    } else if (stockStatus === "low-stock") {
+      filtered = filtered.filter(
+        (p) => p.totalStock > 0 && p.reorderLevel && p.totalStock <= p.reorderLevel
+      );
+    } else if (stockStatus === "in-stock") {
+      filtered = filtered.filter(
+        (p) => p.totalStock > 0 && (!p.reorderLevel || p.totalStock > p.reorderLevel)
+      );
+    }
+
     setFilteredProducts(filtered);
-  }, [searchTerm, selectedCategory, products]);
+  }, [searchTerm, selectedCategory, stockStatus, products]);
 
   const getStockStatus = (product: Product) => {
     if (product.totalStock === 0) {
@@ -127,6 +150,17 @@ export default function ProductsList() {
                       {category}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={stockStatus} onValueChange={setStockStatus}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Stock Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="in-stock">In Stock</SelectItem>
+                  <SelectItem value="low-stock">Low Stock</SelectItem>
+                  <SelectItem value="out-of-stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
             </div>

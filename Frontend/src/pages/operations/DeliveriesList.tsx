@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { StatusBadge } from "@/components/StatusBadge";
 import { deliveryOrdersApi } from "@/api/operations";
@@ -14,19 +14,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Eye } from "lucide-react";
 import { format } from "date-fns";
 
 export default function DeliveriesList() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>([]);
+  const [filteredDeliveryOrders, setFilteredDeliveryOrders] = useState<DeliveryOrder[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const loadDeliveryOrders = async () => {
       try {
         const data = await deliveryOrdersApi.getDeliveryOrders();
         setDeliveryOrders(data);
+        setFilteredDeliveryOrders(data);
       } catch (error) {
         console.error("Failed to load delivery orders:", error);
       } finally {
@@ -36,6 +47,27 @@ export default function DeliveriesList() {
 
     loadDeliveryOrders();
   }, []);
+
+  // Set initial status filter from URL params
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam === "pending") {
+      setStatusFilter("pending");
+    }
+  }, [searchParams]);
+
+  // Apply status filter
+  useEffect(() => {
+    let filtered = [...deliveryOrders];
+
+    if (statusFilter === "pending") {
+      filtered = filtered.filter((d) => d.status === "waiting" || d.status === "draft");
+    } else if (statusFilter !== "all") {
+      filtered = filtered.filter((d) => d.status === statusFilter);
+    }
+
+    setFilteredDeliveryOrders(filtered);
+  }, [statusFilter, deliveryOrders]);
 
   return (
     <AppLayout>
@@ -53,11 +85,28 @@ export default function DeliveriesList() {
 
         <Card>
           <CardContent className="pt-6">
+            <div className="mb-6 flex justify-end">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="waiting">Waiting</SelectItem>
+                  <SelectItem value="ready">Ready</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>
-            ) : deliveryOrders.length === 0 ? (
+            ) : filteredDeliveryOrders.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">No delivery orders found</p>
                 <Button variant="link" onClick={() => navigate("/operations/deliveries/new")}>
@@ -79,7 +128,7 @@ export default function DeliveriesList() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deliveryOrders.map((order) => (
+                    {filteredDeliveryOrders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.referenceNo}</TableCell>
                         <TableCell>{order.customerName}</TableCell>

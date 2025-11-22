@@ -174,6 +174,21 @@ export const mockReceipts: Receipt[] = [
     createdAt: "2024-11-22T08:00:00Z",
     updatedAt: "2024-11-22T08:00:00Z",
   },
+  {
+    id: "rec-3",
+    referenceNo: "REC-2024-003",
+    supplierName: "Global Materials Co.",
+    warehouseId: "wh-3",
+    warehouseName: "Production Floor",
+    date: "2024-11-23T10:00:00Z",
+    status: "draft",
+    lines: [
+      { id: "line-20", productId: "prod-3", productName: "Material C", productSku: "MAT-C-003", quantity: 300, unitOfMeasure: "kg", unitPrice: 10.00 },
+    ],
+    notes: "New order draft",
+    createdAt: "2024-11-23T08:00:00Z",
+    updatedAt: "2024-11-23T08:00:00Z",
+  },
 ];
 
 // Delivery Orders
@@ -208,6 +223,36 @@ export const mockDeliveryOrders: DeliveryOrder[] = [
     createdAt: "2024-11-22T09:00:00Z",
     updatedAt: "2024-11-22T10:00:00Z",
   },
+  {
+    id: "del-3",
+    referenceNo: "DEL-2024-003",
+    customerName: "Tech Solutions Ltd",
+    warehouseId: "wh-2",
+    warehouseName: "Distribution Center",
+    date: "2024-11-23T10:00:00Z",
+    status: "waiting",
+    lines: [
+      { id: "line-21", productId: "prod-5", productName: "Assembly E", productSku: "ASM-E-005", quantity: 15, unitOfMeasure: "pieces" },
+    ],
+    notes: "Awaiting confirmation",
+    createdAt: "2024-11-23T08:00:00Z",
+    updatedAt: "2024-11-23T08:00:00Z",
+  },
+  {
+    id: "del-4",
+    referenceNo: "DEL-2024-004",
+    customerName: "Retail Partners Inc",
+    warehouseId: "wh-1",
+    warehouseName: "Main Warehouse",
+    date: "2024-11-23T15:00:00Z",
+    status: "draft",
+    lines: [
+      { id: "line-22", productId: "prod-1", productName: "Widget A", productSku: "WGT-A-001", quantity: 50, unitOfMeasure: "pieces" },
+    ],
+    notes: "Draft order",
+    createdAt: "2024-11-23T09:00:00Z",
+    updatedAt: "2024-11-23T09:00:00Z",
+  },
 ];
 
 // Internal Transfers
@@ -231,6 +276,46 @@ export const mockInternalTransfers: InternalTransfer[] = [
     notes: "Transfer for distribution",
     createdAt: "2024-11-20T08:00:00Z",
     updatedAt: "2024-11-20T12:00:00Z",
+  },
+  {
+    id: "trf-2",
+    referenceNo: "TRF-2024-002",
+    fromWarehouseId: "wh-2",
+    fromWarehouseName: "Distribution Center",
+    fromLocationId: "loc-5",
+    fromLocationName: "Storage Area",
+    toWarehouseId: "wh-3",
+    toWarehouseName: "Production Floor",
+    toLocationId: "loc-6",
+    toLocationName: "Production Rack",
+    date: "2024-11-23T10:00:00Z",
+    status: "ready",
+    lines: [
+      { id: "line-23", productId: "prod-5", productName: "Assembly E", productSku: "ASM-E-005", quantity: 10, unitOfMeasure: "pieces" },
+    ],
+    notes: "Scheduled transfer for production",
+    createdAt: "2024-11-23T08:00:00Z",
+    updatedAt: "2024-11-23T08:00:00Z",
+  },
+  {
+    id: "trf-3",
+    referenceNo: "TRF-2024-003",
+    fromWarehouseId: "wh-1",
+    fromWarehouseName: "Main Warehouse",
+    fromLocationId: "loc-2",
+    fromLocationName: "Rack A",
+    toWarehouseId: "wh-3",
+    toWarehouseName: "Production Floor",
+    toLocationId: "loc-7",
+    toLocationName: "Assembly Area",
+    date: "2024-11-23T14:00:00Z",
+    status: "waiting",
+    lines: [
+      { id: "line-24", productId: "prod-2", productName: "Component B", productSku: "CMP-B-002", quantity: 15, unitOfMeasure: "pieces" },
+    ],
+    notes: "Pending pickup",
+    createdAt: "2024-11-23T09:00:00Z",
+    updatedAt: "2024-11-23T09:00:00Z",
   },
 ];
 

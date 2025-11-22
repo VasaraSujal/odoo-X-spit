@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { StatusBadge } from "@/components/StatusBadge";
 import { internalTransfersApi } from "@/api/operations";
@@ -14,19 +14,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Eye, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 export default function TransfersList() {
   const [transfers, setTransfers] = useState<InternalTransfer[]>([]);
+  const [filteredTransfers, setFilteredTransfers] = useState<InternalTransfer[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const loadTransfers = async () => {
       try {
         const data = await internalTransfersApi.getInternalTransfers();
         setTransfers(data);
+        setFilteredTransfers(data);
       } catch (error) {
         console.error("Failed to load transfers:", error);
       } finally {
@@ -36,6 +47,27 @@ export default function TransfersList() {
 
     loadTransfers();
   }, []);
+
+  // Set initial status filter from URL params
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam === "scheduled") {
+      setStatusFilter("scheduled");
+    }
+  }, [searchParams]);
+
+  // Apply status filter
+  useEffect(() => {
+    let filtered = [...transfers];
+
+    if (statusFilter === "scheduled") {
+      filtered = filtered.filter((t) => t.status === "waiting" || t.status === "ready");
+    } else if (statusFilter !== "all") {
+      filtered = filtered.filter((t) => t.status === statusFilter);
+    }
+
+    setFilteredTransfers(filtered);
+  }, [statusFilter, transfers]);
 
   return (
     <AppLayout>
@@ -53,11 +85,28 @@ export default function TransfersList() {
 
         <Card>
           <CardContent className="pt-6">
+            <div className="mb-6 flex justify-end">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="waiting">Waiting</SelectItem>
+                  <SelectItem value="ready">Ready</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>
-            ) : transfers.length === 0 ? (
+            ) : filteredTransfers.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">No transfers found</p>
                 <Button variant="link" onClick={() => navigate("/operations/transfers/new")}>
@@ -78,7 +127,7 @@ export default function TransfersList() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transfers.map((transfer) => (
+                    {filteredTransfers.map((transfer) => (
                       <TableRow key={transfer.id}>
                         <TableCell className="font-medium">{transfer.referenceNo}</TableCell>
                         <TableCell>
