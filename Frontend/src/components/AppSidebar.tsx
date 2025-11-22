@@ -255,7 +255,7 @@ export function AppSidebar() {
     >
       <SidebarContent className="bg-white">
         {/* Brand Header */}
-        <div className={`flex h-20 items-center border-b-2 border-slate-200 bg-slate-900 transition-all duration-300 ${
+        <div className={`flex h-20 items-center border-b-2 border-slate-200 bg-white transition-all duration-300 ${
           collapsed ? "justify-center px-4" : "px-6"
         }`}>
           {!collapsed && (
@@ -264,7 +264,7 @@ export function AppSidebar() {
                 <Package className="w-6 h-6 text-slate-900" />
               </div>
               <div>
-                <h1 className="text-xl font-black text-white tracking-tight">
+                <h1 className="text-xl font-black text-black tracking-tight">
                   StockMaster
                 </h1>
                 <p className="text-xs text-slate-400 font-medium">Inventory System</p>

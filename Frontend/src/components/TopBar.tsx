@@ -24,7 +24,7 @@ export const TopBar = () => {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-6">
-      <SidebarTrigger />
+      {/* <SidebarTrigger /> */}
       
       <div className="flex-1" />
 
