@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,13 +26,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Function to refresh user data
+  const refreshUser = async () => {
+    try {
+      const userData = await authApi.getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+      // If token is invalid, clear storage and user
+      localStorage.removeItem("authToken");
+      setUser(null);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     // Check for existing session
     const token = localStorage.getItem("authToken");
     if (token) {
       authApi.getCurrentUser()
         .then(setUser)
-        .catch(() => {
+        .catch((error) => {
+          console.error("Failed to get current user:", error);
           localStorage.removeItem("authToken");
         })
         .finally(() => setIsLoading(false));
@@ -41,15 +57,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { user, token } = await authApi.login({ email, password });
-    localStorage.setItem("authToken", token);
-    setUser(user);
+    try {
+      const { user: userData, token } = await authApi.login({ email, password });
+      localStorage.setItem("authToken", token);
+      setUser(userData);
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await authApi.logout();
-    localStorage.removeItem("authToken");
-    setUser(null);
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("authToken");
+      setUser(null);
+    }
   };
 
   return (
@@ -61,9 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         setUser,
+        refreshUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+

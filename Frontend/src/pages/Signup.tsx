@@ -4,15 +4,23 @@ import { authApi } from "@/api/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Package } from "lucide-react";
+import { Package, Users, Warehouse } from "lucide-react";
 
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<"inventory_manager" | "warehouse_staff">("warehouse_staff");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -34,9 +42,14 @@ export default function Signup() {
       return;
     }
 
+    if (!role) {
+      toast.error("Please select a role");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const result = await authApi.signup({ name, email, password });
+      const result = await authApi.signup({ name, email, password, role });
       toast.success(result.message);
       navigate("/login");
     } catch (error) {
@@ -79,6 +92,34 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value: "inventory_manager" | "warehouse_staff") => setRole(value)} disabled={isLoading}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inventory_manager">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Inventory Manager</span>
+                        <span className="text-xs text-muted-foreground">Manage incoming & outgoing stock</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="warehouse_staff">
+                    <div className="flex items-center gap-2">
+                      <Warehouse className="h-4 w-4" />
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Warehouse Staff</span>
+                        <span className="text-xs text-muted-foreground">Transfers, picking, shelving & counting</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
