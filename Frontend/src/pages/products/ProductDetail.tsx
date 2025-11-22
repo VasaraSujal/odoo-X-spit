@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Package } from "lucide-react";
+import { ArrowLeft, Edit, Package, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ProductDetail() {
@@ -23,26 +23,36 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadData = async () => {
+    if (!id) return;
+
+    try {
+      const [productData, movementsData] = await Promise.all([
+        productsApi.getProduct(id),
+        stockMovementsApi.getStockMovements({ productId: id }),
+      ]);
+      setProduct(productData);
+      setMovements(movementsData.slice(0, 10));
+    } catch (error) {
+      console.error("Failed to load product:", error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadData();
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!id) return;
-
-      try {
-        const [productData, movementsData] = await Promise.all([
-          productsApi.getProduct(id),
-          stockMovementsApi.getStockMovements({ productId: id }),
-        ]);
-        setProduct(productData);
-        setMovements(movementsData.slice(0, 10));
-      } catch (error) {
-        console.error("Failed to load product:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    const loadInitialData = async () => {
+      await loadData();
+      setIsLoading(false);
     };
 
-    loadData();
+    loadInitialData();
   }, [id]);
 
   if (isLoading) {
@@ -79,6 +89,14 @@ export default function ProductDetail() {
             <h1 className="text-3xl font-bold">{product.name}</h1>
             <p className="text-muted-foreground">{product.sku}</p>
           </div>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
           <Button onClick={() => navigate(`/products/${id}/edit`)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit

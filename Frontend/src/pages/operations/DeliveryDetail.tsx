@@ -26,9 +26,8 @@ export default function DeliveryDetail() {
   useEffect(() => {
     const loadDelivery = async () => {
       try {
-        const data = await deliveryOrdersApi.getDeliveryOrders();
-        const foundDelivery = data.find((d) => d.id === id);
-        setDelivery(foundDelivery || null);
+        const data = await deliveryOrdersApi.getDeliveryOrder(id!);
+        setDelivery(data);
       } catch (error) {
         console.error("Failed to load delivery:", error);
       } finally {

@@ -14,23 +14,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Package, Calendar, MapPin, FileText, User } from "lucide-react";
+import { ArrowLeft, Package, Calendar, MapPin, FileText, User, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ReceiptDetail() {
   const { id } = useParams<{ id: string }>();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadReceipt = async () => {
       try {
-        const data = await receiptsApi.getReceipts();
-        const foundReceipt = data.find((r) => r.id === id);
-        setReceipt(foundReceipt || null);
+        const data = await receiptsApi.getReceipt(id!);
+        setReceipt(data);
       } catch (error) {
         console.error("Failed to load receipt:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load receipt",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -40,6 +47,29 @@ export default function ReceiptDetail() {
       loadReceipt();
     }
   }, [id]);
+
+  const handleProcess = async () => {
+    if (!id || !receipt) return;
+
+    setIsProcessing(true);
+    try {
+      const updatedReceipt = await receiptsApi.processReceipt(id);
+      setReceipt(updatedReceipt);
+      toast({
+        title: "Success",
+        description: "Receipt processed successfully. Stock has been updated.",
+      });
+    } catch (error: any) {
+      console.error("Failed to process receipt:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to process receipt",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -88,7 +118,19 @@ export default function ReceiptDetail() {
               <p className="text-muted-foreground">Receipt Details</p>
             </div>
           </div>
-          <StatusBadge status={receipt.status} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={receipt.status} />
+            {receipt.status !== 'done' && (
+              <Button 
+                onClick={handleProcess} 
+                disabled={isProcessing}
+                className="gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {isProcessing ? "Processing..." : "Process Receipt"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Summary Cards */}

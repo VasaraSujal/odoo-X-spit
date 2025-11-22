@@ -193,11 +193,12 @@ export default function DeliveryForm() {
         });
         navigate(`/operations/deliveries/${newOrder.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save delivery order:", error);
+      const errorMessage = error?.message || `Failed to ${isEditing ? "update" : "create"} delivery order`;
       toast({
         title: "Error",
-        description: `Failed to ${isEditing ? "update" : "create"} delivery order`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

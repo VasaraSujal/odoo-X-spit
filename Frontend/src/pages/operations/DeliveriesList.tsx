@@ -36,10 +36,12 @@ export default function DeliveriesList() {
     const loadDeliveryOrders = async () => {
       try {
         const data = await deliveryOrdersApi.getDeliveryOrders();
-        setDeliveryOrders(data);
-        setFilteredDeliveryOrders(data);
+        setDeliveryOrders(data || []);
+        setFilteredDeliveryOrders(data || []);
       } catch (error) {
         console.error("Failed to load delivery orders:", error);
+        setDeliveryOrders([]);
+        setFilteredDeliveryOrders([]);
       } finally {
         setIsLoading(false);
       }
@@ -58,6 +60,11 @@ export default function DeliveriesList() {
 
   // Apply status filter
   useEffect(() => {
+    if (!deliveryOrders) {
+      setFilteredDeliveryOrders([]);
+      return;
+    }
+    
     let filtered = [...deliveryOrders];
 
     if (statusFilter === "pending") {

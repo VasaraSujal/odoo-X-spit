@@ -1,11 +1,4 @@
-// Mock operations API
-import {
-  mockReceipts,
-  mockDeliveryOrders,
-  mockInternalTransfers,
-  mockStockAdjustments,
-  mockStockMovements,
-} from "./mockData";
+// Operations API
 import type {
   Receipt,
   DeliveryOrder,
@@ -15,227 +8,232 @@ import type {
   DocumentStatus,
 } from "@/types";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-let receipts = [...mockReceipts];
-let deliveryOrders = [...mockDeliveryOrders];
-let internalTransfers = [...mockInternalTransfers];
-let stockAdjustments = [...mockStockAdjustments];
-let stockMovements = [...mockStockMovements];
+// Helper function to get auth token
+const getAuthToken = (): string | null => {
+  return localStorage.getItem("authToken");
+};
 
-// Generate reference number
-const generateRefNo = (prefix: string): string => {
-  const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-  return `${prefix}-${year}-${random}`;
+// Helper function to make authenticated requests
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  
+  if (!response.ok) {
+    let error;
+    try {
+      error = await response.json();
+    } catch (e) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    throw new Error(error.message || "API request failed");
+  }
+  
+  return response.json();
 };
 
 // RECEIPTS
 export const receiptsApi = {
   async getReceipts(filters?: { status?: DocumentStatus; warehouseId?: string }): Promise<Receipt[]> {
-    await delay(400);
-    let filtered = [...receipts];
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.warehouseId) params.append("warehouseId", filters.warehouseId);
     
-    if (filters?.status) {
-      filtered = filtered.filter((r) => r.status === filters.status);
-    }
-    if (filters?.warehouseId) {
-      filtered = filtered.filter((r) => r.warehouseId === filters.warehouseId);
-    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/receipts${queryString ? `?${queryString}` : ""}`;
     
-    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const response = await fetchWithAuth(url);
+    return response.data;
   },
 
   async getReceipt(id: string): Promise<Receipt> {
-    await delay(300);
-    const receipt = receipts.find((r) => r.id === id);
-    if (!receipt) throw new Error("Receipt not found");
-    return receipt;
+    const response = await fetchWithAuth(`${API_BASE_URL}/receipts/${id}`);
+    return response.data;
   },
 
   async createReceipt(data: Omit<Receipt, "id" | "referenceNo" | "createdAt" | "updatedAt">): Promise<Receipt> {
-    await delay(600);
-    const newReceipt: Receipt = {
-      ...data,
-      id: `rec-${Date.now()}`,
-      referenceNo: generateRefNo("REC"),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    receipts.push(newReceipt);
-    return newReceipt;
+    const response = await fetchWithAuth(`${API_BASE_URL}/receipts`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
   },
 
   async updateReceipt(id: string, data: Partial<Receipt>): Promise<Receipt> {
-    await delay(500);
-    const index = receipts.findIndex((r) => r.id === id);
-    if (index === -1) throw new Error("Receipt not found");
-    
-    receipts[index] = { ...receipts[index], ...data, updatedAt: new Date().toISOString() };
-    return receipts[index];
+    const response = await fetchWithAuth(`${API_BASE_URL}/receipts/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  async processReceipt(id: string): Promise<Receipt> {
+    const response = await fetchWithAuth(`${API_BASE_URL}/receipts/${id}/process`, {
+      method: "POST",
+    });
+    return response.data;
   },
 
   async deleteReceipt(id: string): Promise<void> {
-    await delay(400);
-    const index = receipts.findIndex((r) => r.id === id);
-    if (index === -1) throw new Error("Receipt not found");
-    receipts.splice(index, 1);
+    await fetchWithAuth(`${API_BASE_URL}/receipts/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
 // DELIVERY ORDERS
 export const deliveryOrdersApi = {
   async getDeliveryOrders(filters?: { status?: DocumentStatus; warehouseId?: string }): Promise<DeliveryOrder[]> {
-    await delay(400);
-    let filtered = [...deliveryOrders];
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.warehouseId) params.append("warehouseId", filters.warehouseId);
     
-    if (filters?.status) {
-      filtered = filtered.filter((d) => d.status === filters.status);
-    }
-    if (filters?.warehouseId) {
-      filtered = filtered.filter((d) => d.warehouseId === filters.warehouseId);
-    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/deliveries${queryString ? `?${queryString}` : ""}`;
     
-    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const response = await fetchWithAuth(url);
+    return response.data;
   },
 
   async getDeliveryOrder(id: string): Promise<DeliveryOrder> {
-    await delay(300);
-    const order = deliveryOrders.find((d) => d.id === id);
-    if (!order) throw new Error("Delivery order not found");
-    return order;
+    const response = await fetchWithAuth(`${API_BASE_URL}/deliveries/${id}`);
+    return response.data;
   },
 
   async createDeliveryOrder(data: Omit<DeliveryOrder, "id" | "referenceNo" | "createdAt" | "updatedAt">): Promise<DeliveryOrder> {
-    await delay(600);
-    const newOrder: DeliveryOrder = {
-      ...data,
-      id: `del-${Date.now()}`,
-      referenceNo: generateRefNo("DEL"),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    deliveryOrders.push(newOrder);
-    return newOrder;
+    const response = await fetchWithAuth(`${API_BASE_URL}/deliveries`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
   },
 
   async updateDeliveryOrder(id: string, data: Partial<DeliveryOrder>): Promise<DeliveryOrder> {
-    await delay(500);
-    const index = deliveryOrders.findIndex((d) => d.id === id);
-    if (index === -1) throw new Error("Delivery order not found");
-    
-    deliveryOrders[index] = { ...deliveryOrders[index], ...data, updatedAt: new Date().toISOString() };
-    return deliveryOrders[index];
+    const response = await fetchWithAuth(`${API_BASE_URL}/deliveries/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  async processDeliveryOrder(id: string): Promise<DeliveryOrder> {
+    const response = await fetchWithAuth(`${API_BASE_URL}/deliveries/${id}/process`, {
+      method: "POST",
+    });
+    return response.data;
   },
 
   async deleteDeliveryOrder(id: string): Promise<void> {
-    await delay(400);
-    const index = deliveryOrders.findIndex((d) => d.id === id);
-    if (index === -1) throw new Error("Delivery order not found");
-    deliveryOrders.splice(index, 1);
+    await fetchWithAuth(`${API_BASE_URL}/deliveries/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
 // INTERNAL TRANSFERS
 export const internalTransfersApi = {
-  async getInternalTransfers(filters?: { status?: DocumentStatus }): Promise<InternalTransfer[]> {
-    await delay(400);
-    let filtered = [...internalTransfers];
+  async getInternalTransfers(filters?: { status?: DocumentStatus; sourceWarehouseId?: string; destinationWarehouseId?: string }): Promise<InternalTransfer[]> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.sourceWarehouseId) params.append("sourceWarehouseId", filters.sourceWarehouseId);
+    if (filters?.destinationWarehouseId) params.append("destinationWarehouseId", filters.destinationWarehouseId);
     
-    if (filters?.status) {
-      filtered = filtered.filter((t) => t.status === filters.status);
-    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/transfers${queryString ? `?${queryString}` : ""}`;
     
-    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const response = await fetchWithAuth(url);
+    return response.data;
   },
 
   async getInternalTransfer(id: string): Promise<InternalTransfer> {
-    await delay(300);
-    const transfer = internalTransfers.find((t) => t.id === id);
-    if (!transfer) throw new Error("Transfer not found");
-    return transfer;
+    const response = await fetchWithAuth(`${API_BASE_URL}/transfers/${id}`);
+    return response.data;
   },
 
   async createInternalTransfer(data: Omit<InternalTransfer, "id" | "referenceNo" | "createdAt" | "updatedAt">): Promise<InternalTransfer> {
-    await delay(600);
-    const newTransfer: InternalTransfer = {
-      ...data,
-      id: `trf-${Date.now()}`,
-      referenceNo: generateRefNo("TRF"),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    internalTransfers.push(newTransfer);
-    return newTransfer;
+    const response = await fetchWithAuth(`${API_BASE_URL}/transfers`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
   },
 
   async updateInternalTransfer(id: string, data: Partial<InternalTransfer>): Promise<InternalTransfer> {
-    await delay(500);
-    const index = internalTransfers.findIndex((t) => t.id === id);
-    if (index === -1) throw new Error("Transfer not found");
-    
-    internalTransfers[index] = { ...internalTransfers[index], ...data, updatedAt: new Date().toISOString() };
-    return internalTransfers[index];
+    const response = await fetchWithAuth(`${API_BASE_URL}/transfers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  async processInternalTransfer(id: string): Promise<InternalTransfer> {
+    const response = await fetchWithAuth(`${API_BASE_URL}/transfers/${id}/process`, {
+      method: "POST",
+    });
+    return response.data;
   },
 
   async deleteInternalTransfer(id: string): Promise<void> {
-    await delay(400);
-    const index = internalTransfers.findIndex((t) => t.id === id);
-    if (index === -1) throw new Error("Transfer not found");
-    internalTransfers.splice(index, 1);
+    await fetchWithAuth(`${API_BASE_URL}/transfers/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
 // STOCK ADJUSTMENTS
 export const stockAdjustmentsApi = {
-  async getStockAdjustments(filters?: { status?: DocumentStatus; warehouseId?: string }): Promise<StockAdjustment[]> {
-    await delay(400);
-    let filtered = [...stockAdjustments];
+  async getStockAdjustments(filters?: { status?: DocumentStatus; warehouseId?: string; adjustmentType?: string }): Promise<StockAdjustment[]> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.warehouseId) params.append("warehouseId", filters.warehouseId);
+    if (filters?.adjustmentType) params.append("adjustmentType", filters.adjustmentType);
     
-    if (filters?.status) {
-      filtered = filtered.filter((a) => a.status === filters.status);
-    }
-    if (filters?.warehouseId) {
-      filtered = filtered.filter((a) => a.warehouseId === filters.warehouseId);
-    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/adjustments${queryString ? `?${queryString}` : ""}`;
     
-    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const response = await fetchWithAuth(url);
+    return response.data;
   },
 
   async getStockAdjustment(id: string): Promise<StockAdjustment> {
-    await delay(300);
-    const adjustment = stockAdjustments.find((a) => a.id === id);
-    if (!adjustment) throw new Error("Adjustment not found");
-    return adjustment;
+    const response = await fetchWithAuth(`${API_BASE_URL}/adjustments/${id}`);
+    return response.data;
   },
 
   async createStockAdjustment(data: Omit<StockAdjustment, "id" | "referenceNo" | "createdAt" | "updatedAt">): Promise<StockAdjustment> {
-    await delay(600);
-    const newAdjustment: StockAdjustment = {
-      ...data,
-      id: `adj-${Date.now()}`,
-      referenceNo: generateRefNo("ADJ"),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    stockAdjustments.push(newAdjustment);
-    return newAdjustment;
+    const response = await fetchWithAuth(`${API_BASE_URL}/adjustments`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
   },
 
   async updateStockAdjustment(id: string, data: Partial<StockAdjustment>): Promise<StockAdjustment> {
-    await delay(500);
-    const index = stockAdjustments.findIndex((a) => a.id === id);
-    if (index === -1) throw new Error("Adjustment not found");
-    
-    stockAdjustments[index] = { ...stockAdjustments[index], ...data, updatedAt: new Date().toISOString() };
-    return stockAdjustments[index];
+    const response = await fetchWithAuth(`${API_BASE_URL}/adjustments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  async processStockAdjustment(id: string): Promise<StockAdjustment> {
+    const response = await fetchWithAuth(`${API_BASE_URL}/adjustments/${id}/process`, {
+      method: "POST",
+    });
+    return response.data;
   },
 
   async deleteStockAdjustment(id: string): Promise<void> {
-    await delay(400);
-    const index = stockAdjustments.findIndex((a) => a.id === id);
-    if (index === -1) throw new Error("Adjustment not found");
-    stockAdjustments.splice(index, 1);
+    await fetchWithAuth(`${API_BASE_URL}/adjustments/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -248,25 +246,22 @@ export const stockMovementsApi = {
     startDate?: string;
     endDate?: string;
   }): Promise<StockMovement[]> {
-    await delay(400);
-    let filtered = [...stockMovements];
+    const params = new URLSearchParams();
+    if (filters?.productId) params.append("productId", filters.productId);
+    if (filters?.warehouseId) params.append("warehouseId", filters.warehouseId);
+    if (filters?.movementType) params.append("movementType", filters.movementType);
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
     
-    if (filters?.productId) {
-      filtered = filtered.filter((m) => m.productId === filters.productId);
-    }
-    if (filters?.warehouseId) {
-      filtered = filtered.filter((m) => m.warehouseId === filters.warehouseId);
-    }
-    if (filters?.movementType) {
-      filtered = filtered.filter((m) => m.movementType === filters.movementType);
-    }
-    if (filters?.startDate) {
-      filtered = filtered.filter((m) => new Date(m.timestamp) >= new Date(filters.startDate!));
-    }
-    if (filters?.endDate) {
-      filtered = filtered.filter((m) => new Date(m.timestamp) <= new Date(filters.endDate!));
-    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/stock-movements${queryString ? `?${queryString}` : ""}`;
     
-    return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const response = await fetchWithAuth(url);
+    return response.data;
+  },
+
+  async getProductMovements(productId: string): Promise<StockMovement[]> {
+    const response = await fetchWithAuth(`${API_BASE_URL}/stock-movements/product/${productId}`);
+    return response.data;
   },
 };
